@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Publicar Vouch – Ghost Store</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_DOMINIO.firebaseapp.com",
+      projectId: "TU_PROJECT_ID",
+      storageBucket: "TU_BUCKET",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  <style>
+    body {
+      background: linear-gradient(to right, #111, #000);
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+    }
+    h1 {
+      color: #00ffcc;
+      text-shadow: 0 0 8px #00ffcc;
+    }
+    input, textarea, button {
+      width: 100%;
+      max-width: 500px;
+      margin: 1rem 0;
+      padding: 0.8rem;
+      border: 1px solid #00ffcc;
+      background: #000;
+      color: #fff;
+      border-radius: 8px;
+    }
+    button {
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+    }
+    .message {
+      margin-top: 1rem;
+      color: #0f0;
+    }
+  </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
+    authDomain: "vouches-48101.firebaseapp.com",
+    projectId: "vouches-48101",
+    storageBucket: "vouches-48101.firebasestorage.app",
+    messagingSenderId: "540919268825",
+    appId: "1:540919268825:web:648dd594b32b967e8f85c8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.db = db;
+  window.firestore = { collection, addDoc, onSnapshot, query, orderBy };
+</script>
+
+</head>
+<body>
+  <h1>Publica tu Vouch</h1>
+  <form id="vouchForm">
+    <input id="token" placeholder="Token de autorización" required>
+    <textarea id="mensaje" rows="4" placeholder="Escribe tu testimonio aquí..." required></textarea>
+    <button type="submit">Publicar</button>
+    <div class="message" id="msg"></div>
+  </form>
+  <script>
+    const tokens = {
+      "demo123": { cliente: "@usuario_demo", producto: "ChatGPT Plus" }
+    };
+
+    document.getElementById('vouchForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const token = document.getElementById('token').value.trim();
+      const mensaje = document.getElementById('mensaje').value.trim();
+      const msg = document.getElementById('msg');
+
+      if (!tokens[token]) {
+        msg.textContent = "Token inválido o expirado.";
+        msg.style.color = '#f55';
+        return;
+      }
+
+      const { cliente, producto } = tokens[token];
+
+      db.collection('vouches').add({
+        cliente,
+        producto,
+        mensaje,
+        fecha: new Date()
+      }).then(() => {
+        msg.innerHTML = `✅ Vouch publicado:<br><b>${cliente}</b> sobre <i>${producto}</i><br>"${mensaje}"`;
+        msg.style.color = '#0f0';
+        document.getElementById('vouchForm').reset();
+      }).catch((err) => {
+        msg.textContent = 'Error al guardar vouch.';
+        msg.style.color = '#f55';
+      });
+    });
+  </script>
+</body>
+</html>

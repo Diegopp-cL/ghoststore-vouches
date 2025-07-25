@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ghost Store – Vouches</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_DOMINIO.firebaseapp.com",
+      projectId: "TU_PROJECT_ID",
+      storageBucket: "TU_BUCKET",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: linear-gradient(to right, #000, #111);
+      color: #fff;
+      padding: 2rem;
+    }
+    h1, h2 {
+      color: #fff;
+      text-shadow: 0 0 10px #00ffcc;
+    }
+    .vouch {
+      background: rgba(255,255,255,0.05);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #00ffcc;
+      border-radius: 10px;
+    }
+    .admin-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #00ffcc;
+      color: #000;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
+    authDomain: "vouches-48101.firebaseapp.com",
+    projectId: "vouches-48101",
+    storageBucket: "vouches-48101.firebasestorage.app",
+    messagingSenderId: "540919268825",
+    appId: "1:540919268825:web:648dd594b32b967e8f85c8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.db = db;
+  window.firestore = { collection, addDoc, onSnapshot, query, orderBy };
+</script>
+
+</head>
+<body>
+  <div class="admin-toggle" onclick="toggleAdmin()">Admin</div>
+  <h1>Vouches – Ghost Store</h1>
+  <section id="vouches">
+    <h2>Testimonios de clientes</h2>
+    <div id="vouch-list"></div>
+  </section>
+  <script>
+    function toggleAdmin() {
+      alert("Acceso admin no implementado aquí.");
+    }
+
+    db.collection("vouches").orderBy("fecha", "desc").onSnapshot(snapshot => {
+      const list = document.getElementById("vouch-list");
+      list.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.className = "vouch";
+        div.innerHTML = `💬 <b>${data.cliente}</b> sobre <i>${data.producto}</i><br>"${data.mensaje}"`;
+        list.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html>

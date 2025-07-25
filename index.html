@@ -3,62 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <title>Ghost Store – Vouches</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
+      authDomain: "vouches-48101.firebaseapp.com",
+      projectId: "vouches-48101",
+      storageBucket: "vouches-48101.firebasestorage.app",
+      messagingSenderId: "540919268825",
+      appId: "1:540919268825:web:648dd594b32b967e8f85c8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      const contenedor = document.getElementById("vouches-list");
+      contenedor.innerHTML = "Cargando testimonios...";
+      const querySnapshot = await getDocs(collection(db, "vouches"));
+      contenedor.innerHTML = "";
+
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const fecha = data.fecha?.toDate?.().toLocaleString?.() || "";
+        const card = document.createElement("div");
+        card.className = "vouch";
+        card.innerHTML = `
+          <h3>${data.cliente}</h3>
+          <p><strong>${data.producto}</strong></p>
+          <p>⭐ ${data.puntuacion || 0}/5</p>
+          <p>${data.mensaje}</p>
+          <small>${fecha}</small>
+        `;
+        contenedor.appendChild(card);
+      });
+    });
+  </script>
   <style>
     body {
-      margin: 0;
+      background: #101010;
+      color: #f1f1f1;
+      font-family: 'Segoe UI', sans-serif;
       padding: 2rem;
-      background: #000;
-      color: #fff;
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      margin: 0;
     }
-    h1 { color: #00ffcc; }
+    h1 {
+      text-align: center;
+      color: #00ffc8;
+    }
+    .vouch {
+      background: #1b1b1b;
+      padding: 1rem;
+      margin: 1rem auto;
+      border-radius: 10px;
+      max-width: 500px;
+      box-shadow: 0 0 10px #000a;
+      animation: fadeIn 0.5s ease-in;
+    }
+    .vouch h3 {
+      margin: 0;
+      color: #00ffc8;
+    }
+    .vouch p {
+      margin: 0.5rem 0;
+    }
+    .vouch small {
+      display: block;
+      margin-top: 0.5rem;
+      color: #888;
+    }
+    .botones {
+      text-align: center;
+      margin-top: 2rem;
+    }
     .botones a {
-      display: inline-block;
-      background: #00ffcc;
+      background: #00ffc8;
       color: #000;
-      padding: 1rem 2rem;
-      margin: 1rem;
+      padding: 0.6rem 1.2rem;
       border-radius: 6px;
       text-decoration: none;
       font-weight: bold;
-      transition: transform 0.2s;
+      margin: 0.5rem;
+      display: inline-block;
+      transition: background 0.3s;
     }
     .botones a:hover {
-      transform: scale(1.05);
+      background: #00e6b0;
     }
-    .banner {
-      margin-top: 3rem;
-      width: 100%;
-      background: #111;
-      overflow: hidden;
+    .ticker {
+      background: #222;
+      padding: 1rem;
+      margin-top: 2rem;
+      color: #00ffc8;
+      font-size: 0.95rem;
+      text-align: center;
+      animation: marquee 20s linear infinite;
       white-space: nowrap;
     }
-    .banner span {
-      display: inline-block;
-      padding: 1rem;
-      color: #0cf;
-      font-size: 1.2rem;
-      animation: deslizar 20s linear infinite;
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
     }
-    @keyframes deslizar {
-      from { transform: translateX(100%); }
-      to { transform: translateX(-100%); }
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 3rem;
     }
-    footer { margin-top: 3rem; opacity: 0.4; font-size: 0.9rem; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
-  <h1>Ghost Store – Vouches</h1>
+  <h1>Testimonios Ghost Store</h1>
+  <div id="vouches-list"></div>
   <div class="botones">
-    <a href="vouch.html">Ingresa tu Vouch</a>
-    <a href="admin.html">Panel Admin</a>
+    <a href="vouch.html">📝 Ingresa tu vouch</a>
+    <a href="admin.html">🔒 Panel Admin</a>
   </div>
-  <div class="banner">
-    <span>🔄 ¡Restock diario en nuestro grupo de WhatsApp! | ✅ Compra 100% segura y confiable | 🎮 Productos digitales premium en segundos | ⭐ Revisa testimonios reales abajo 🔽</span>
-  </div>
-  <footer>Versión 1.06</footer>
+  <div class="ticker">Restock en nuestro grupo de WSP • Compra con confianza • Envíos rápidos • Garantía Ghost Store</div>
+  <footer>Versión 1.08</footer>
 </body>
 </html>

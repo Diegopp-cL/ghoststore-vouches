@@ -4,95 +4,73 @@
 <head>
   <meta charset="UTF-8">
   <title>Ghost Store – Vouches</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
     const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_DOMINIO.firebaseapp.com",
-      projectId: "TU_PROJECT_ID",
-      storageBucket: "TU_BUCKET",
-      messagingSenderId: "SENDER_ID",
-      appId: "APP_ID"
+      apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
+      authDomain: "vouches-48101.firebaseapp.com",
+      projectId: "vouches-48101",
+      storageBucket: "vouches-48101.firebasestorage.app",
+      messagingSenderId: "540919268825",
+      appId: "1:540919268825:web:648dd594b32b967e8f85c8"
     };
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      background: linear-gradient(to right, #000, #111);
-      color: #fff;
-      padding: 2rem;
-    }
-    h1, h2 {
-      color: #fff;
-      text-shadow: 0 0 10px #00ffcc;
-    }
-    .vouch {
-      background: rgba(255,255,255,0.05);
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-left: 4px solid #00ffcc;
-      border-radius: 10px;
-    }
-    .admin-toggle {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      background: #00ffcc;
-      color: #000;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-  </style>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
-    authDomain: "vouches-48101.firebaseapp.com",
-    projectId: "vouches-48101",
-    storageBucket: "vouches-48101.firebasestorage.app",
-    messagingSenderId: "540919268825",
-    appId: "1:540919268825:web:648dd594b32b967e8f85c8"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  window.db = db;
-  window.firestore = { collection, addDoc, onSnapshot, query, orderBy };
-</script>
-
-</head>
-<body>
-  <div class="admin-toggle" onclick="toggleAdmin()">Admin</div>
-  <h1>Vouches – Ghost Store</h1>
-  <section id="vouches">
-    <h2>Testimonios de clientes</h2>
-    <div id="vouch-list"></div>
-  </section>
-  <script>
-    function toggleAdmin() {
-      alert("Acceso admin no implementado aquí.");
-    }
-
-    db.collection("vouches").orderBy("fecha", "desc").onSnapshot(snapshot => {
+    window.addEventListener("DOMContentLoaded", () => {
+      const q = query(collection(db, "vouches"), orderBy("fecha", "desc"));
       const list = document.getElementById("vouch-list");
-      list.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.className = "vouch";
-        div.innerHTML = `💬 <b>${data.cliente}</b> sobre <i>${data.producto}</i><br>"${data.mensaje}"`;
-        list.appendChild(div);
+
+      onSnapshot(q, snapshot => {
+        list.innerHTML = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const div = document.createElement("div");
+          div.className = "vouch";
+          div.innerHTML = `💬 <b>${d.cliente}</b> sobre <i>${d.producto}</i><br>"${d.mensaje}"`;
+          list.appendChild(div);
+        });
       });
     });
+  </script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: linear-gradient(to right, #000, #111); color: #fff; padding: 2rem; }
+    .admin-toggle { position: fixed; top: 1rem; right: 1rem; background: #00ffcc; color: #000; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .admin-box { background: rgba(255,255,255,0.05); padding: 1rem; margin-top: 1rem; border-radius: 8px; display: none; }
+    input, button { margin-top: 0.5rem; padding: 0.6rem; width: 100%; max-width: 400px; }
+    .vouch { background: rgba(255,255,255,0.05); padding: 1rem; margin: 1rem 0; border-left: 4px solid #00ffcc; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="admin-toggle" onclick="document.getElementById('admin-box').style.display = 'block'">Admin</div>
+  <h1>Vouches – Ghost Store</h1>
+  <h2>Testimonios de clientes</h2>
+  <div id="vouch-list"></div>
+
+  <div id="admin-box" class="admin-box">
+    <h3>Acceso Admin</h3>
+    <input id="user" placeholder="Usuario">
+    <input id="pass" placeholder="Contraseña" type="password">
+    <input id="cliente" placeholder="@cliente">
+    <input id="producto" placeholder="Producto comprado">
+    <button onclick="generar()">Generar Token</button>
+    <p id="token-out"></p>
+  </div>
+
+  <script>
+    function generar() {
+      const u = document.getElementById("user").value;
+      const p = document.getElementById("pass").value;
+      if (u !== "admin" || p !== "1234") return alert("Acceso denegado");
+      const cliente = document.getElementById("cliente").value;
+      const producto = document.getElementById("producto").value;
+      const token = Math.random().toString(36).slice(2, 8);
+      localStorage.setItem("token_" + token, JSON.stringify({ cliente, producto }));
+      document.getElementById("token-out").textContent = "Token generado: " + token;
+    }
   </script>
 </body>
 </html>

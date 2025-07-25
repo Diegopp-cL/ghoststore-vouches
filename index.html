@@ -182,8 +182,44 @@
     Version 1.09
   </footer>
 
-  <script src="firebase.js"></script>
-  <script src="index.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
+      authDomain: "vouches-48101.firebaseapp.com",
+      projectId: "vouches-48101",
+      storageBucket: "vouches-48101.firebasestorage.app",
+      messagingSenderId: "540919268825",
+      appId: "1:540919268825:web:648dd594b32b967e8f85c8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function cargarVouches() {
+      const contenedor = document.getElementById("vouchList");
+      const q = query(collection(db, "vouches"), orderBy("fecha", "desc"));
+      const resultado = await getDocs(q);
+      contenedor.innerHTML = "";
+      resultado.forEach(docSnap => {
+        const data = docSnap.data();
+        const fecha = data.fecha?.toDate?.().toLocaleString?.() || "";
+        const div = document.createElement("div");
+        div.className = "vouch";
+        div.innerHTML = `
+          <strong>${data.cliente}</strong> – ${data.producto}<br>
+          <div class="puntuacion">${'⭐'.repeat(data.puntuacion || 0)}</div>
+          <em>${data.mensaje}</em>
+          <div class="fecha">🕒 ${fecha}</div>
+        `;
+        contenedor.appendChild(div);
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", cargarVouches);
+  </script>
 </body>
 
 </html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Admin</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
+      authDomain: "vouches-48101.firebaseapp.com",
+      projectId: "vouches-48101",
+      storageBucket: "vouches-48101.firebasestorage.app",
+      messagingSenderId: "540919268825",
+      appId: "1:540919268825:web:648dd594b32b967e8f85c8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function cargarVouches() {
+      const contenedor = document.getElementById("lista");
+      contenedor.innerHTML = "Cargando...";
+      const vouches = await getDocs(collection(db, "vouches"));
+      contenedor.innerHTML = "";
+
+      vouches.forEach((docSnap) => {
+        const data = docSnap.data();
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = `
+          <strong>${data.cliente}</strong> – ${data.producto} <br>
+          <em>${data.mensaje}</em> <br>
+          ⭐ ${data.puntuacion}/5 <br>
+          <button data-id="${docSnap.id}">Eliminar</button>
+        `;
+        contenedor.appendChild(item);
+      });
+
+      contenedor.querySelectorAll("button").forEach(btn => {
+        btn.onclick = async () => {
+          await deleteDoc(doc(db, "vouches", btn.dataset.id));
+          cargarVouches();
+        };
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("login-form");
+      form.addEventListener("submit", e => {
+        e.preventDefault();
+        const user = document.getElementById("user").value;
+        const pass = document.getElementById("pass").value;
+        if (user === "admin" && pass === "1234") {
+          document.getElementById("auth").style.display = "none";
+          document.getElementById("panel").style.display = "block";
+          cargarVouches();
+        } else {
+          alert("Acceso denegado.");
+        }
+      });
+    });
+  </script>
+  <style>
+    body { background: #111; color: #eee; font-family: sans-serif; padding: 2rem; }
+    .item { background: #222; padding: 1rem; margin: 1rem 0; border-radius: 6px; }
+    button { background: #f55; color: #fff; border: none; padding: 0.5rem 1rem; cursor: pointer; border-radius: 5px; }
+    #auth input { display: block; margin: 0.5rem 0; padding: 0.6rem; width: 100%; max-width: 300px; }
+    #auth button { background: #00ffcc; color: #000; font-weight: bold; border: none; padding: 0.6rem 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="auth">
+    <h2>Login Admin</h2>
+    <form id="login-form">
+      <input id="user" placeholder="Usuario">
+      <input id="pass" type="password" placeholder="Contraseña">
+      <button type="submit">Ingresar</button>
+    </form>
+  </div>
+  <div id="panel" style="display:none">
+    <h1>Panel de Administración</h1>
+    <div id="lista">Cargando...</div>
+  </div>
+</body>
+</html>

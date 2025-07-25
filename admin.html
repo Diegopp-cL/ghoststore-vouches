@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ghost Store - Admin Panel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -114,14 +116,19 @@
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    h1, h2 { color: #00ffc8; }
+    h1, h2 { color: #00ffc8; text-align: center; }
     .item {
       background: #222;
       padding: 1rem;
       margin: 1rem 0;
       border-radius: 8px;
       box-shadow: 0 0 10px #0008;
+      max-width: 600px;
+      width: 100%;
     }
     button {
       background: #ff3b3b;
@@ -169,6 +176,15 @@
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      input, button {
+        font-size: 1rem;
+        width: 100%;
+      }
     }
   </style>
 </head>

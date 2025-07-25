@@ -2,58 +2,63 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Ghost Store – Admin</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
-      authDomain: "vouches-48101.firebaseapp.com",
-      projectId: "vouches-48101",
-      storageBucket: "vouches-48101.firebasestorage.app",
-      messagingSenderId: "540919268825",
-      appId: "1:540919268825:web:648dd594b32b967e8f85c8"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("formulario");
-      const out = document.getElementById("salida");
-
-      form.addEventListener("submit", async e => {
-        e.preventDefault();
-        const cliente = document.getElementById("cliente").value.trim();
-        const producto = document.getElementById("producto").value.trim();
-        const token = Math.random().toString(36).substring(2, 10);
-
-        try {
-          await setDoc(doc(db, "tokens", token), { cliente, producto });
-          out.innerHTML = `✅ Token generado: <b>${token}</b>`;
-          form.reset();
-        } catch {
-          out.textContent = "Error al guardar token.";
-          out.style.color = "#f55";
-        }
-      });
-    });
-  </script>
+  <title>Ghost Store – Vouches</title>
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; padding: 2rem; }
-    input, button { display: block; width: 100%; max-width: 400px; margin: 1rem 0; padding: 0.7rem; border-radius: 5px; border: none; }
-    button { background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; }
-    #salida { margin-top: 1rem; }
+    body {
+      margin: 0;
+      padding: 2rem;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { color: #00ffcc; }
+    .botones a {
+      display: inline-block;
+      background: #00ffcc;
+      color: #000;
+      padding: 1rem 2rem;
+      margin: 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    .botones a:hover {
+      transform: scale(1.05);
+    }
+    .banner {
+      margin-top: 3rem;
+      width: 100%;
+      background: #111;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .banner span {
+      display: inline-block;
+      padding: 1rem;
+      color: #0cf;
+      font-size: 1.2rem;
+      animation: deslizar 20s linear infinite;
+    }
+    @keyframes deslizar {
+      from { transform: translateX(100%); }
+      to { transform: translateX(-100%); }
+    }
+    footer { margin-top: 3rem; opacity: 0.4; font-size: 0.9rem; }
   </style>
 </head>
 <body>
-  <h1>Generar Token para Cliente</h1>
-  <form id="formulario">
-    <input id="cliente" placeholder="Nombre del cliente" required>
-    <input id="producto" placeholder="Producto (ej: Netflix 12M)" required>
-    <button type="submit">Generar Token</button>
-    <p id="salida"></p>
-  </form>
+  <h1>Ghost Store – Vouches</h1>
+  <div class="botones">
+    <a href="vouch.html">Ingresa tu Vouch</a>
+    <a href="admin.html">Panel Admin</a>
+  </div>
+  <div class="banner">
+    <span>🔄 ¡Restock diario en nuestro grupo de WhatsApp! | ✅ Compra 100% segura y confiable | 🎮 Productos digitales premium en segundos | ⭐ Revisa testimonios reales abajo 🔽</span>
+  </div>
+  <footer>Versión 1.05</footer>
 </body>
 </html>

@@ -1,132 +1,189 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Ghost Store – Vouches</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
-      authDomain: "vouches-48101.firebaseapp.com",
-      projectId: "vouches-48101",
-      storageBucket: "vouches-48101.firebasestorage.app",
-      messagingSenderId: "540919268825",
-      appId: "1:540919268825:web:648dd594b32b967e8f85c8"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    window.addEventListener("DOMContentLoaded", async () => {
-      const contenedor = document.getElementById("vouches-list");
-      contenedor.innerHTML = "Cargando testimonios...";
-      const querySnapshot = await getDocs(collection(db, "vouches"));
-      contenedor.innerHTML = "";
-
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        const fecha = data.fecha?.toDate?.().toLocaleString?.() || "";
-        const card = document.createElement("div");
-        card.className = "vouch";
-        card.innerHTML = `
-          <h3>${data.cliente}</h3>
-          <p><strong>${data.producto}</strong></p>
-          <p>⭐ ${data.puntuacion || 0}/5</p>
-          <p>${data.mensaje}</p>
-          <small>${fecha}</small>
-        `;
-        contenedor.appendChild(card);
-      });
-    });
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reseñas - Ghost Store</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
+    :root {
+      --color-principal: #00ffcc;
+      --color-fondo: #0f0f0f;
+      --color-texto: #ffffff;
+      --color-tarjeta: #1a1a1a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
-      background: #101010;
-      color: #f1f1f1;
-      font-family: 'Segoe UI', sans-serif;
-      padding: 2rem;
-      margin: 0;
-    }
-    h1 {
-      text-align: center;
-      color: #00ffc8;
-    }
-    .vouch {
-      background: #1b1b1b;
+      background-color: var(--color-fondo);
+      color: var(--color-texto);
+      font-family: Arial, sans-serif;
       padding: 1rem;
-      margin: 1rem auto;
-      border-radius: 10px;
-      max-width: 500px;
-      box-shadow: 0 0 10px #000a;
-      animation: fadeIn 0.5s ease-in;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
     }
-    .vouch h3 {
-      margin: 0;
-      color: #00ffc8;
-    }
-    .vouch p {
-      margin: 0.5rem 0;
-    }
-    .vouch small {
-      display: block;
-      margin-top: 0.5rem;
-      color: #888;
-    }
-    .botones {
+
+    h1 {
+      color: var(--color-principal);
+      margin-bottom: 0.5rem;
       text-align: center;
-      margin-top: 2rem;
     }
+
+    p.descripcion {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+
+    .vouch-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 2rem;
+      padding: 0 1rem;
+    }
+
+    .vouch {
+      background-color: var(--color-tarjeta);
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+    }
+
+    .vouch strong {
+      color: var(--color-principal);
+    }
+
+    .botones {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2rem;
+      padding: 0 1rem;
+    }
+
     .botones a {
-      background: #00ffc8;
+      background-color: var(--color-principal);
       color: #000;
-      padding: 0.6rem 1.2rem;
-      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      border-radius: 5px;
       text-decoration: none;
       font-weight: bold;
-      margin: 0.5rem;
-      display: inline-block;
-      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.3s;
     }
+
     .botones a:hover {
-      background: #00e6b0;
+      background-color: #00ccb3;
     }
-    .ticker {
-      background: #222;
-      padding: 1rem;
-      margin-top: 2rem;
-      color: #00ffc8;
-      font-size: 0.95rem;
-      text-align: center;
-      animation: marquee 20s linear infinite;
-      white-space: nowrap;
-    }
-    @keyframes marquee {
-      0% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
-    }
+
     footer {
+      margin-top: auto;
+      padding: 1rem;
       text-align: center;
-      font-size: 0.8rem;
-      color: #666;
-      margin-top: 3rem;
+      font-size: 0.85rem;
+      color: #aaa;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+
+    .ticker {
+      width: 100%;
+      background-color: #111;
+      overflow: hidden;
+      white-space: nowrap;
+      box-shadow: 0 0 5px #00ffcc55;
+      margin-bottom: 2rem;
+    }
+
+    .ticker-text {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scroll 15s linear infinite;
+      color: var(--color-principal);
+      font-weight: bold;
+    }
+
+    @keyframes scroll {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      p.descripcion {
+        font-size: 1rem;
+        padding: 0 1rem;
+      }
+
+      .botones a {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .vouch-container {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 1.3rem;
+      }
+
+      p.descripcion {
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
+
 <body>
-  <h1>Reseñas - Ghost Store.</h1>
-  <h2>Bienvenido, aqui encontraras las reseñas de nuestros clientes, nos caracterizamos por tener reseñas fidedignas para que compres con confianza.</h2>
-  <div id="vouches-list"></div>
-  <div class="botones">
-    <a href="vouch.html">📝 Ingresa tu vouch</a>
-    <a href="admin.html">🔒 Panel Admin</a>
+  <h1>Reseñas - Ghost Store</h1>
+  <p class="descripcion">Bienvenido, aquí encontrarás las reseñas de nuestros clientes. Nos caracterizamos por tener reseñas fidedignas para que compres con confianza.</p>
+
+  <div class="vouch-container" id="vouchList">
+    <!-- Aquí se insertan dinámicamente los vouches -->
   </div>
-  <div class="ticker">Restock en nuestro grupo de WSP • Compra con confianza • Entrega rápida • Todos nuestros productos cuenta con Garantía.</div>
-  <footer>Versión 1.08</footer>
+
+  <div class="botones">
+    <a href="vouch.html"><i class="fas fa-pen"></i> Ingresa tu vouch</a>
+    <a href="admin.html"><i class="fas fa-user-shield"></i> Panel Admin</a>
+  </div>
+
+  <div class="ticker">
+    <div class="ticker-text">Restock en nuestro grupo de WhatsApp - Compra con confianza - Vouches reales y verificados - Atención rápida y segura</div>
+  </div>
+
+  <footer>
+    Version 1.09
+  </footer>
+
+  <script src="firebase.js"></script>
+  <script src="index.js"></script>
 </body>
+
 </html>

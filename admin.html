@@ -27,12 +27,14 @@
 
       vouches.forEach((docSnap) => {
         const data = docSnap.data();
+        const fecha = data.fecha?.toDate?.().toLocaleString?.() || "";
         const item = document.createElement("div");
         item.className = "item";
         item.innerHTML = `
           <strong>${data.cliente}</strong> – ${data.producto} <br>
           <em>${data.mensaje}</em> <br>
-          ⭐ ${data.puntuacion}/5 <br>
+          ⭐ ${data.puntuacion || 0}/5 <br>
+          🕒 ${fecha} <br>
           <button data-id="${docSnap.id}">Eliminar</button>
         `;
         contenedor.appendChild(item);
@@ -68,6 +70,9 @@
     button { background: #f55; color: #fff; border: none; padding: 0.5rem 1rem; cursor: pointer; border-radius: 5px; }
     #auth input { display: block; margin: 0.5rem 0; padding: 0.6rem; width: 100%; max-width: 300px; }
     #auth button { background: #00ffcc; color: #000; font-weight: bold; border: none; padding: 0.6rem 1rem; cursor: pointer; }
+    .volver { margin-top: 2rem; text-align: center; }
+    .volver a { color: #0cf; text-decoration: none; font-weight: bold; }
+    footer { opacity: 0.5; margin-top: 2rem; text-align: center; font-size: 0.8rem; }
   </style>
 </head>
 <body>
@@ -83,5 +88,7 @@
     <h1>Panel de Administración</h1>
     <div id="lista">Cargando...</div>
   </div>
+  <div class="volver"><a href="index.html">⬅ Volver al inicio</a></div>
+  <footer>Versión 1.05</footer>
 </body>
 </html>

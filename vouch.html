@@ -5,7 +5,7 @@
   <title>Publicar Vouch</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
@@ -55,7 +55,7 @@
             producto,
             mensaje,
             puntuacion,
-            fecha: new Date()
+            fecha: Timestamp.now()
           });
 
           msg.innerHTML = `✅ Vouch publicado de <b>${cliente}</b>`;
@@ -101,12 +101,9 @@
       color: gold;
       transform: scale(1.2);
     }
-    .version {
-      text-align: center;
-      margin-top: 2rem;
-      color: #666;
-      font-size: 0.9rem;
-    }
+    .volver { margin-top: 2rem; text-align: center; }
+    .volver a { color: #0cf; text-decoration: none; font-weight: bold; }
+    .version { text-align: center; margin-top: 2rem; color: #666; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -124,6 +121,7 @@
     <button type="submit">Enviar</button>
     <p id="mensaje-out"></p>
   </form>
-  <div class="version">Versión 1.03</div>
+  <div class="volver"><a href="index.html">⬅ Volver al inicio</a></div>
+  <div class="version">Versión 1.05</div>
 </body>
 </html>

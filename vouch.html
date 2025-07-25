@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,7 +6,7 @@
   <title>Publicar Vouch</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
@@ -22,76 +23,92 @@
     window.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("formulario");
       const msg = document.getElementById("mensaje-out");
-      const estrellas = document.querySelectorAll(".estrella");
-      let puntuacion = 0;
-
-      estrellas.forEach((estrella, i) => {
-        estrella.addEventListener("click", () => {
-          puntuacion = i + 1;
-          estrellas.forEach((e, j) => {
-            e.classList.toggle("activa", j < puntuacion);
-          });
-        });
-      });
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const token = document.getElementById("token").value.trim();
         const mensaje = document.getElementById("mensaje").value.trim();
-        const datos = localStorage.getItem("token_" + token);
-
-        if (!datos) {
-          msg.textContent = "Token inválido o expirado.";
-          msg.style.color = "#f55";
-          return;
-        }
-
-        const { cliente, producto } = JSON.parse(datos);
 
         try {
+          const ref = doc(db, "tokens", token);
+          const snap = await getDoc(ref);
+          if (!snap.exists()) {
+            msg.textContent = "Token inválido o expirado.";
+            msg.style.color = "#f55";
+            return;
+          }
+
+          const { cliente, producto } = snap.data();
+
           await addDoc(collection(db, "vouches"), {
             cliente,
             producto,
             mensaje,
-            puntuacion,
             fecha: new Date()
           });
+
           msg.innerHTML = `✅ Vouch publicado de <b>${cliente}</b>`;
           msg.style.color = "#0f0";
           form.reset();
-          estrellas.forEach(e => e.classList.remove("activa"));
         } catch (error) {
-          msg.textContent = "Error al guardar.";
+          msg.textContent = "Error al guardar vouch.";
           msg.style.color = "#f55";
         }
       });
     });
   </script>
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; padding: 2rem; }
-    input, textarea, button { display: block; width: 100%; max-width: 500px; margin: 1rem 0; padding: 0.7rem; border: none; border-radius: 5px; }
-    textarea { height: 120px; }
-    button { background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; }
-    .estrellas { display: flex; gap: 5px; font-size: 2rem; margin-top: 1rem; }
-    .estrella { cursor: pointer; transition: transform 0.2s; }
-    .estrella.activa { color: gold; transform: scale(1.2); }
+    body {
+      background: #000;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+      animation: fadeIn 1s ease;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    h1 {
+      color: #00ffcc;
+      text-shadow: 0 0 6px #00ffcc;
+      text-align: center;
+    }
+    form {
+      max-width: 600px;
+      margin: auto;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin: 1rem 0;
+      padding: 0.8rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+    textarea {
+      resize: vertical;
+      height: 100px;
+    }
+    button {
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #mensaje-out {
+      margin-top: 1rem;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <h1>Publicar Vouch</h1>
   <form id="formulario">
     <input id="token" placeholder="Token de autorización" required>
-    <textarea id="mensaje" placeholder="Tu testimonio..." required></textarea>
-    <div class="estrellas">
-      <span class="estrella">★</span>
-      <span class="estrella">★</span>
-      <span class="estrella">★</span>
-      <span class="estrella">★</span>
-      <span class="estrella">★</span>
-    </div>
+    <textarea id="mensaje" placeholder="Escribe tu testimonio aquí..." required></textarea>
     <button type="submit">Enviar</button>
     <p id="mensaje-out"></p>
   </form>
-  <footer style="margin-top:2rem;opacity:0.5">Versión 1.04</footer>
 </body>
 </html>

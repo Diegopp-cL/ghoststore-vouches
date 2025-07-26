@@ -39,12 +39,12 @@
           <em>${data.mensaje}</em><br>
           ⭐ ${data.puntuacion || 0}/5<br>
           🕒 ${fecha}<br>
-          <button data-id="${docSnap.id}" class="eliminar">Eliminar</button>
+          <button data-id="${docSnap.id}" class="eliminar-vouch">Eliminar</button>
         `;
         contenedor.appendChild(item);
       });
 
-      contenedor.querySelectorAll(".eliminar").forEach(btn => {
+      contenedor.querySelectorAll(".eliminar-vouch").forEach(btn => {
         btn.onclick = async () => {
           await deleteDoc(doc(db, "vouches", btn.dataset.id));
           cargarVouches();
@@ -65,12 +65,12 @@
         item.innerHTML = `
           <strong>${data.cliente}</strong> – ${data.producto}<br>
           <code>${docSnap.id}</code>
-          <button data-id="${docSnap.id}" class="eliminar">🗑</button>
+          <button data-id="${docSnap.id}" class="eliminar-token">🗑</button>
         `;
         contenedor.appendChild(item);
       });
 
-      contenedor.querySelectorAll(".eliminar").forEach(btn => {
+      contenedor.querySelectorAll(".eliminar-token").forEach(btn => {
         btn.onclick = async () => {
           await deleteDoc(doc(db, "tokens", btn.dataset.id));
           cargarTokens();
@@ -102,7 +102,10 @@
         const url = await getDownloadURL(item);
         const div = document.createElement("div");
         div.className = "proof-item";
-        div.innerHTML = `<img src="${url}" alt="Proof"><br><button onclick="eliminarProof('${item.fullPath}')">Eliminar</button>`;
+        div.innerHTML = `
+          <img src="${url}" alt="Proof"><br>
+          <button onclick="eliminarProof('${item.fullPath}')">Eliminar</button>
+        `;
         galeria.appendChild(div);
       });
     }
@@ -269,6 +272,6 @@
   </div>
 
   <div class="volver"><a href="index.html">⬅ Volver al inicio</a></div>
-  <footer>Versión 1.11</footer>
+  <footer>Versión 1.12</footer>
 </body>
 </html>

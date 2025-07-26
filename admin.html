@@ -54,6 +54,7 @@
 
     async function cargarTokens() {
       const contenedor = document.getElementById("tokens");
+      contenedor.innerHTML = "Cargando...";
       const tokens = await getDocs(collection(db, "tokens"));
       contenedor.innerHTML = "";
 
@@ -100,7 +101,8 @@
       listado.items.forEach(async (item) => {
         const url = await getDownloadURL(item);
         const div = document.createElement("div");
-        div.innerHTML = `<img src="${url}" alt="Proof" style="max-width: 100%; border-radius: 10px;"><br><button onclick="eliminarProof('${item.fullPath}')">Eliminar</button>`;
+        div.className = "proof-item";
+        div.innerHTML = `<img src="${url}" alt="Proof"><br><button onclick="eliminarProof('${item.fullPath}')">Eliminar</button>`;
         galeria.appendChild(div);
       });
     }
@@ -211,11 +213,13 @@
       max-width: 800px;
       width: 100%;
     }
-    .proofs img {
+    .proof-item {
+      margin-bottom: 1rem;
+    }
+    .proof-item img {
       max-width: 100%;
       border-radius: 10px;
       box-shadow: 0 0 10px #00ffcc55;
-      margin: 1rem 0;
     }
     @media (max-width: 600px) {
       body {
@@ -265,6 +269,6 @@
   </div>
 
   <div class="volver"><a href="index.html">⬅ Volver al inicio</a></div>
-  <footer>Versión 1.09</footer>
+  <footer>Versión 1.11</footer>
 </body>
 </html>

@@ -15,9 +15,7 @@
       flex-direction: column;
       align-items: center;
     }
-    h1 {
-      color: #00ffc8;
-    }
+    h1 { color: #00ffc8; }
     form {
       display: flex;
       flex-direction: column;
@@ -35,22 +33,29 @@
       border: none;
       width: 100%;
     }
-    textarea {
-      resize: vertical;
-    }
+    textarea { resize: vertical; }
     button {
       background: #00ffc8;
       color: #000;
       font-weight: bold;
       cursor: pointer;
+      transition: background .2s;
     }
-    .volver {
-      margin-top: 1.5rem;
+    button:disabled { opacity: .5; pointer-events: none; }
+    .msg {
+      margin: 0.8rem 0 0.3rem 0;
+      display: none;
+      padding: 0.7rem 1rem;
+      border-radius: 5px;
+      font-weight: bold;
+      background: #232323;
+      text-align: center;
+      font-size: 1rem;
     }
-    .volver a {
-      color: #00ffc8;
-      text-decoration: none;
-    }
+    .msg.success { color: #0f0; background: #102912; display: block; }
+    .msg.error { color: #ff3b3b; background: #291010; display: block; }
+    .volver { margin-top: 1.5rem; }
+    .volver a { color: #00ffc8; text-decoration: none; }
     @media (max-width: 600px) {
       form { padding: 1rem; }
       input, textarea, button { font-size: 1rem; }
@@ -59,10 +64,10 @@
 </head>
 <body>
   <h1>Publica tu experiencia</h1>
-  <form id="formulario">
-    <input type="text" id="token" placeholder="Token proporcionado">
-    <textarea id="mensaje" rows="4" placeholder="Escribe tu vouch..."></textarea>
-    <select id="puntuacion">
+  <form id="formulario" autocomplete="off">
+    <input type="text" id="token" placeholder="Token proporcionado" autocomplete="off" required>
+    <textarea id="mensaje" rows="4" placeholder="Escribe tu vouch..." required></textarea>
+    <select id="puntuacion" required>
       <option value="">Puntúa tu experiencia</option>
       <option value="5">⭐⭐⭐⭐⭐</option>
       <option value="4">⭐⭐⭐⭐</option>
@@ -70,7 +75,8 @@
       <option value="2">⭐⭐</option>
       <option value="1">⭐</option>
     </select>
-    <button type="submit">Enviar Vouch</button>
+    <button type="submit" id="enviarBtn">Enviar Vouch</button>
+    <div id="msg" class="msg"></div>
   </form>
 
   <div class="volver">
@@ -85,7 +91,7 @@
       apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
       authDomain: "vouches-48101.firebaseapp.com",
       projectId: "vouches-48101",
-      storageBucket: "vouches-48101.firebasestorage.app",
+      storageBucket: "vouches-48101.appspot.com",
       messagingSenderId: "540919268825",
       appId: "1:540919268825:web:648dd594b32b967e8f85c8"
     };
@@ -93,30 +99,53 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    function showMsg(msg, type="success") {
+      const el = document.getElementById("msg");
+      el.textContent = msg;
+      el.className = "msg " + (type === "error" ? "error" : "success");
+      el.style.display = "block";
+    }
+
     document.getElementById("formulario").addEventListener("submit", async e => {
       e.preventDefault();
+      const btn = document.getElementById("enviarBtn");
+      btn.disabled = true;
+      const msgEl = document.getElementById("msg");
+      msgEl.style.display = "none";
+
       const token = document.getElementById("token").value.trim();
       const mensaje = document.getElementById("mensaje").value.trim();
       const puntuacion = document.getElementById("puntuacion").value;
 
-      if (!token || !mensaje || !puntuacion) return alert("Completa todos los campos");
+      if (!token || !mensaje || !puntuacion) {
+        showMsg("Completa todos los campos", "error");
+        btn.disabled = false;
+        return;
+      }
 
-      const ref = doc(db, "tokens", token);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) return alert("Token inválido o ya usado");
-
-      const data = snap.data();
-      await addDoc(collection(db, "vouches"), {
-        cliente: data.cliente,
-        producto: data.producto,
-        mensaje,
-        puntuacion: parseInt(puntuacion),
-        fecha: serverTimestamp()
-      });
-
-      await deleteDoc(ref);
-      alert("✅ Gracias por tu vouch!");
-      e.target.reset();
+      try {
+        const ref = doc(db, "tokens", token);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          showMsg("Token inválido o ya usado", "error");
+          btn.disabled = false;
+          return;
+        }
+        const data = snap.data();
+        await addDoc(collection(db, "vouches"), {
+          cliente: data.cliente,
+          producto: data.producto,
+          mensaje,
+          puntuacion: parseInt(puntuacion),
+          fecha: serverTimestamp()
+        });
+        await deleteDoc(ref);
+        showMsg("✅ ¡Gracias por tu vouch!", "success");
+        e.target.reset();
+      } catch {
+        showMsg("Ocurrió un error al guardar tu vouch. Inténtalo nuevamente.", "error");
+      }
+      btn.disabled = false;
     });
   </script>
 </body>

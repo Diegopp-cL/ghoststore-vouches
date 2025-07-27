@@ -33,7 +33,6 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
       min-height: 100vh;
     }
 
@@ -43,17 +42,17 @@
       text-align: center;
     }
 
+    p.descripcion {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+
     .promedio {
       font-size: 1.1rem;
       margin-bottom: 1.5rem;
       color: var(--color-estrellas);
       font-weight: bold;
-    }
-
-    p.descripcion {
-      text-align: center;
-      margin-bottom: 2rem;
-      font-size: 1rem;
     }
 
     .vouch-container {
@@ -108,14 +107,6 @@
       background-color: #00ccb3;
     }
 
-    footer {
-      margin-top: auto;
-      padding: 1rem;
-      text-align: center;
-      font-size: 0.85rem;
-      color: #aaa;
-    }
-
     .ticker {
       width: 100%;
       background-color: #111;
@@ -134,53 +125,71 @@
     }
 
     @keyframes scroll {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(-100%);
-      }
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
     }
 
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 1.5rem;
-      }
-
-      p.descripcion {
-        font-size: 1rem;
-        padding: 0 1rem;
-      }
-
-      .botones a {
-        font-size: 0.9rem;
-        padding: 0.5rem 0.8rem;
-      }
+    /* Carousel */
+    .carousel {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      overflow: hidden;
+      margin: 2rem 0;
+    }
+    .carousel-track {
+      display: flex;
+      transition: transform 0.5s ease;
+    }
+    .carousel-item {
+      min-width: 100%;
+    }
+    .carousel-item img {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .carousel-button {
+      background: rgba(0,0,0,0.4);
+      border: none;
+      color: var(--text);
+      font-size: 1.5rem;
+      padding: 0.5rem;
+      cursor: pointer;
+      pointer-events: all;
     }
 
-    @media (max-width: 480px) {
-      .vouch-container {
-        grid-template-columns: 1fr;
-      }
+    footer {
+      margin-top: auto;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #aaa;
+    }
 
-      h1 {
-        font-size: 1.3rem;
-      }
-
-      p.descripcion {
-        font-size: 0.9rem;
-      }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.3rem; }
+      .botones a { font-size: 0.9rem; padding: 0.5rem 0.8rem; }
     }
   </style>
 </head>
 
 <body>
   <h1>Reseñas - Ghost Store</h1>
-  <p class="descripcion">Bienvenido, aquí encontrarás las reseñas de nuestros clientes. Nos caracterizamos por tener reseñas fidedignas para que compres con confianza.</p>
-  <div class="promedio" id="promedioPuntaje">Calculando puntuación promedio...</div>
+  <p class="descripcion">Bienvenido, aquí encontrarás las reseñas de nuestros clientes. Compra con confianza.</p>
+  <div class="promedio" id="promedioPuntaje">Calculando promedio...</div>
 
   <div class="vouch-container" id="vouchList">
-    <!-- Aquí se insertan dinámicamente los vouches -->
+    <!-- Vouches -->
   </div>
 
   <div class="botones">
@@ -189,67 +198,89 @@
   </div>
 
   <div class="ticker">
-    <div class="ticker-text">Restock en nuestro grupo de WhatsApp - Compra con confianza - Vouches reales y verificados - Atención rápida y segura</div>
+    <div class="ticker-text">Restock en nuestro grupo de WhatsApp – Vouches verificados – Envíos rápidos</div>
   </div>
 
-  <footer>
-    Versión 1.10
-  </footer>
+  <!-- Carousel Proofs -->
+  <div class="carousel">
+    <div class="carousel-track" id="carouselTrack"></div>
+    <div class="carousel-nav">
+      <button class="carousel-button" id="prevBtn">‹</button>
+      <button class="carousel-button" id="nextBtn">›</button>
+    </div>
+  </div>
+
+  <footer>Versión 1.11</footer>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCXQLvgJq7YDk8eJcHeP_vdAQv5ijs88i0",
       authDomain: "vouches-48101.firebaseapp.com",
       projectId: "vouches-48101",
-      storageBucket: "vouches-48101.firebasestorage.app",
+      storageBucket: "vouches-48101.appspot.com",
       messagingSenderId: "540919268825",
       appId: "1:540919268825:web:648dd594b32b967e8f85c8"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     async function cargarVouches() {
-      const contenedor = document.getElementById("vouchList");
-      const promedioDiv = document.getElementById("promedioPuntaje");
-      const q = query(collection(db, "vouches"), orderBy("fecha", "desc"));
-      const resultado = await getDocs(q);
-      contenedor.innerHTML = "";
-
-      let suma = 0;
-      let total = 0;
-
-      resultado.forEach(docSnap => {
-        const data = docSnap.data();
-        const fecha = data.fecha?.toDate?.().toLocaleString?.() || "";
-        const div = document.createElement("div");
-        div.className = "vouch";
+      const cont = document.getElementById('vouchList'); cont.innerHTML = ''; 
+      let suma=0, total=0;
+      const q = query(collection(db, 'vouches'), orderBy('fecha', 'desc'));
+      const snap = await getDocs(q);
+      snap.forEach(doc => {
+        const data = doc.data();
+        const fecha = data.fecha?.toDate?.().toLocaleString?.() || '';
+        const div = document.createElement('div'); div.className = 'vouch fade';
         div.innerHTML = `
           <strong>${data.cliente}</strong> – ${data.producto}<br>
-          <div class="puntuacion">${'⭐'.repeat(data.puntuacion || 0)}</div>
+          <div class="puntuacion">${'⭐'.repeat(data.puntuacion||0)}</div>
           <em>${data.mensaje}</em>
           <div class="fecha">🕒 ${fecha}</div>
         `;
-        contenedor.appendChild(div);
-
-        if (data.puntuacion) {
-          suma += data.puntuacion;
-          total++;
-        }
+        cont.appendChild(div);
+        if(data.puntuacion){ suma += data.puntuacion; total++; }
       });
-
-      if (total > 0) {
-        const promedio = (suma / total).toFixed(1);
-        promedioDiv.textContent = `⭐ Promedio de puntuación: ${promedio}/5.0`;
-      } else {
-        promedioDiv.textContent = "No hay vouches disponibles para calcular el promedio.";
-      }
+      const promEl = document.getElementById('promedioPuntaje');
+      promEl.textContent = total ? `⭐ Promedio: ${(suma/total).toFixed(1)}/5` : 'No hay reseñas aún.';
     }
 
-    window.addEventListener("DOMContentLoaded", cargarVouches);
+    async function loadCarousel() {
+      const track = document.getElementById('carouselTrack'); track.innerHTML='';
+      const list = await listAll(ref(storage, 'proofs'));
+      for(const item of list.items) {
+        const url = await getDownloadURL(item);
+        const div = document.createElement('div'); div.className = 'carousel-item';
+        div.innerHTML = `<img src="${url}" alt="Proof">`;
+        track.appendChild(div);
+      }
+      initCarousel();
+    }
+
+    function initCarousel() {
+      const track = document.getElementById('carouselTrack');
+      const items = Array.from(track.children); let idx = 0;
+      document.getElementById('prevBtn').onclick = () => {
+        idx = (idx - 1 + items.length) % items.length;
+        track.style.transform = `translateX(-${idx*100}%)`;
+      };
+      document.getElementById('nextBtn').onclick = () => {
+        idx = (idx + 1) % items.length;
+        track.style.transform = `translateX(-${idx*100}%)`;
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      cargarVouches();
+      loadCarousel();
+    });
   </script>
 </body>
 

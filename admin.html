@@ -5,6 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ghost Store - Admin Panel</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    /* ... (tus estilos originales, + unos extras al final) ... */
+    #msg {
+      margin: 1rem 0;
+      display: none;
+      padding: 0.7rem 1rem;
+      border-radius: 5px;
+      font-weight: bold;
+      background: #232323;
+      text-align: center;
+      font-size: 1rem;
+    }
+    #msg.success { color: #0f0; background: #102912; }
+    #msg.error { color: #ff3b3b; background: #291010; }
+    #logout-btn {
+      background: #00ffc8;
+      color: #111;
+      float: right;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+    .spinner {
+      border: 3px solid #222;
+      border-top: 3px solid #00ffc8;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 1.5rem auto;
+      display: block;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    button:disabled { opacity: 0.6; pointer-events: none; }
+  </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -23,261 +58,244 @@
     const db = getFirestore(app);
     const storage = getStorage(app);
 
+    function showMsg(msg, type="success") {
+      const el = document.getElementById("msg");
+      el.textContent = msg;
+      el.className = type === "error" ? "error" : "success";
+      el.style.display = "block";
+      setTimeout(() => { el.style.display = "none"; }, 3400);
+    }
+
+    function setLoading(containerId) {
+      const c = document.getElementById(containerId);
+      c.innerHTML = '<div class="spinner"></div>';
+    }
+
     async function cargarVouches() {
-      const contenedor = document.getElementById("lista");
-      contenedor.innerHTML = "Cargando...";
-      const vouches = await getDocs(collection(db, "vouches"));
-      contenedor.innerHTML = "";
-
-      vouches.forEach((docSnap) => {
-        const data = docSnap.data();
-        const fecha = data.fecha?.toDate?.().toLocaleString?.() || "";
-        const item = document.createElement("div");
-        item.className = "item fade";
-        item.innerHTML = `
-          <strong>${data.cliente}</strong> – ${data.producto}<br>
-          <em>${data.mensaje}</em><br>
-          ⭐ ${data.puntuacion || 0}/5<br>
-          🕒 ${fecha}<br>
-          <button data-id="${docSnap.id}" class="eliminar">Eliminar</button>
-        `;
-        contenedor.appendChild(item);
-      });
-
-      contenedor.querySelectorAll(".eliminar").forEach(btn => {
-        btn.onclick = async () => {
-          await deleteDoc(doc(db, "vouches", btn.dataset.id));
-          cargarVouches();
-        };
-      });
+      setLoading("lista");
+      try {
+        const contenedor = document.getElementById("lista");
+        const vouches = await getDocs(collection(db, "vouches"));
+        contenedor.innerHTML = "";
+        if (vouches.empty) {
+          contenedor.innerHTML = "<em>No hay vouches publicados.</em>";
+        } else {
+          vouches.forEach((docSnap) => {
+            const data = docSnap.data();
+            const fecha = data.fecha?.toDate?.().toLocaleString?.() || "";
+            const item = document.createElement("div");
+            item.className = "item fade";
+            item.innerHTML = `
+              <strong>${data.cliente}</strong> – ${data.producto}<br>
+              <em>${data.mensaje}</em><br>
+              ⭐ ${data.puntuacion || 0}/5<br>
+              🕒 ${fecha}<br>
+              <button data-id="${docSnap.id}" class="eliminar" aria-label="Eliminar vouch">Eliminar</button>
+            `;
+            contenedor.appendChild(item);
+          });
+        }
+        contenedor.querySelectorAll(".eliminar").forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm("¿Seguro que deseas eliminar este vouch?")) return;
+            btn.disabled = true;
+            try {
+              await deleteDoc(doc(db, "vouches", btn.dataset.id));
+              showMsg("Vouch eliminado correctamente", "success");
+              cargarVouches();
+            } catch {
+              showMsg("Error al eliminar el vouch.", "error");
+            }
+            btn.disabled = false;
+          };
+        });
+      } catch {
+        showMsg("Error cargando vouches.", "error");
+        document.getElementById("lista").innerHTML = "<em>Error al cargar vouches</em>";
+      }
     }
 
     async function cargarTokens() {
-      const contenedor = document.getElementById("tokens");
-      contenedor.innerHTML = "Cargando...";
-      const tokens = await getDocs(collection(db, "tokens"));
-      contenedor.innerHTML = "";
-
-      tokens.forEach((docSnap) => {
-        const data = docSnap.data();
-        const item = document.createElement("div");
-        item.className = "item token fade";
-        item.innerHTML = `
-          <strong>${data.cliente}</strong> – ${data.producto}<br>
-          <code>${docSnap.id}</code>
-          <button data-id="${docSnap.id}" class="eliminar">🗑</button>
-        `;
-        contenedor.appendChild(item);
-      });
-
-      contenedor.querySelectorAll(".eliminar").forEach(btn => {
-        btn.onclick = async () => {
-          await deleteDoc(doc(db, "tokens", btn.dataset.id));
-          cargarTokens();
-        };
-      });
+      setLoading("tokens");
+      try {
+        const contenedor = document.getElementById("tokens");
+        const tokens = await getDocs(collection(db, "tokens"));
+        contenedor.innerHTML = "";
+        if (tokens.empty) {
+          contenedor.innerHTML = "<em>No hay tokens creados.</em>";
+        } else {
+          tokens.forEach((docSnap) => {
+            const data = docSnap.data();
+            const item = document.createElement("div");
+            item.className = "item token fade";
+            item.innerHTML = `
+              <strong>${data.cliente}</strong> – ${data.producto}<br>
+              <code>${docSnap.id}</code>
+              <button data-id="${docSnap.id}" class="eliminar" aria-label="Eliminar token">🗑</button>
+            `;
+            contenedor.appendChild(item);
+          });
+        }
+        contenedor.querySelectorAll(".eliminar").forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm("¿Eliminar este token?")) return;
+            btn.disabled = true;
+            try {
+              await deleteDoc(doc(db, "tokens", btn.dataset.id));
+              showMsg("Token eliminado", "success");
+              cargarTokens();
+            } catch {
+              showMsg("Error al eliminar token", "error");
+            }
+            btn.disabled = false;
+          };
+        });
+      } catch {
+        showMsg("Error cargando tokens.", "error");
+        document.getElementById("tokens").innerHTML = "<em>Error al cargar tokens</em>";
+      }
     }
 
     async function crearTokenManual(event) {
       event.preventDefault();
       const cliente = document.getElementById("nuevo-cliente").value.trim();
       const producto = document.getElementById("nuevo-producto").value.trim();
-      if (!cliente || !producto) return alert("Completa los campos");
-      await addDoc(collection(db, "tokens"), {
-        cliente,
-        producto,
-        creado: serverTimestamp()
-      });
-      alert("✅ Token creado para " + cliente);
-      cargarTokens();
-      event.target.reset();
+      if (!cliente || !producto) return showMsg("Completa todos los campos", "error");
+      try {
+        await addDoc(collection(db, "tokens"), {
+          cliente,
+          producto,
+          creado: serverTimestamp()
+        });
+        showMsg(`Token creado para ${cliente}`, "success");
+        cargarTokens();
+        event.target.reset();
+      } catch {
+        showMsg("Error al crear token", "error");
+      }
     }
 
     async function cargarProofs() {
-      const galeria = document.getElementById("galeria");
-      const proofsRef = ref(storage, 'proofs');
-      const listado = await listAll(proofsRef);
-      galeria.innerHTML = "";
-      for (const item of listado.items) {
-        const url = await getDownloadURL(item);
-        const div = document.createElement("div");
-        div.className = "proof-item fade";
-        div.innerHTML = `
-          <img src="${url}" alt="Proof">
-          <button data-path="${item.fullPath}" class="borrar-img">Eliminar</button>
-        `;
-        galeria.appendChild(div);
+      setLoading("galeria");
+      try {
+        const galeria = document.getElementById("galeria");
+        const proofsRef = ref(storage, 'proofs');
+        const listado = await listAll(proofsRef);
+        galeria.innerHTML = "";
+        if (listado.items.length === 0) {
+          galeria.innerHTML = "<em>No hay imágenes subidas.</em>";
+        } else {
+          for (const item of listado.items) {
+            const url = await getDownloadURL(item);
+            const div = document.createElement("div");
+            div.className = "proof-item fade";
+            div.innerHTML = `
+              <img src="${url}" alt="Proof">
+              <button data-path="${item.fullPath}" class="borrar-img" aria-label="Eliminar imagen">Eliminar</button>
+            `;
+            galeria.appendChild(div);
+          }
+        }
+        galeria.querySelectorAll(".borrar-img").forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm("¿Eliminar esta imagen?")) return;
+            btn.disabled = true;
+            try {
+              await deleteObject(ref(storage, btn.dataset.path));
+              showMsg("Imagen eliminada", "success");
+              cargarProofs();
+            } catch {
+              showMsg("Error al eliminar imagen", "error");
+            }
+            btn.disabled = false;
+          };
+        });
+      } catch {
+        showMsg("Error cargando imágenes", "error");
+        document.getElementById("galeria").innerHTML = "<em>Error al cargar imágenes.</em>";
       }
+    }
 
-      galeria.querySelectorAll(".borrar-img").forEach(btn => {
-        btn.onclick = async () => {
-          await deleteObject(ref(storage, btn.dataset.path));
-          cargarProofs();
-        };
-      });
+    function cerrarSesion() {
+      document.getElementById("auth").style.display = "block";
+      document.getElementById("panel").style.display = "none";
+      document.getElementById("msg").style.display = "none";
+      document.getElementById("login-form").reset();
     }
 
     window.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("login-form");
       form.addEventListener("submit", e => {
         e.preventDefault();
-        const user = document.getElementById("user").value;
+        const user = document.getElementById("user").value.trim();
         const pass = document.getElementById("pass").value;
         if (user === "admin" && pass === "1234") {
           document.getElementById("auth").style.display = "none";
           document.getElementById("panel").style.display = "block";
+          document.getElementById("online").textContent = `🟢 Admin conectado: ${new Date().toLocaleString()}`;
           cargarVouches();
           cargarTokens();
           cargarProofs();
         } else {
-          alert("Acceso denegado.");
+          showMsg("Acceso denegado.", "error");
         }
       });
       document.getElementById("form-token").addEventListener("submit", crearTokenManual);
-      document.getElementById("proof-submit").addEventListener("click", async () => {
-        const archivo = document.getElementById("proofFile").files[0];
-        if (!archivo) return alert("Selecciona una imagen primero.");
-        const ruta = `proofs/${Date.now()}_${archivo.name}`;
-        await uploadBytes(ref(storage, ruta), archivo);
-        cargarProofs();
+      document.getElementById("proof-submit").addEventListener("click", async (e) => {
+        const btn = e.target;
+        btn.disabled = true;
+        try {
+          const archivo = document.getElementById("proofFile").files[0];
+          if (!archivo) return showMsg("Selecciona una imagen primero.", "error");
+          const ruta = `proofs/${Date.now()}_${archivo.name}`;
+          await uploadBytes(ref(storage, ruta), archivo);
+          showMsg("Imagen subida correctamente.", "success");
+          cargarProofs();
+          document.getElementById("proofFile").value = "";
+        } catch {
+          showMsg("Error al subir imagen.", "error");
+        }
+        btn.disabled = false;
       });
-      document.getElementById("online").textContent = `🟢 Admin conectado: ${new Date().toLocaleString()}`;
+      document.getElementById("logout-btn").onclick = cerrarSesion;
     });
   </script>
-  <style>
-    body {
-      background: linear-gradient(to right, #0f0f0f, #1f1f1f);
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h1, h2 { color: #00ffc8; text-align: center; }
-    .item {
-      background: #222;
-      padding: 1rem;
-      margin: 1rem 0;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #0008;
-      max-width: 600px;
-      width: 100%;
-    }
-    button {
-      background: #ff3b3b;
-      color: white;
-      border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover { background: #e22; }
-    input {
-      padding: 0.6rem;
-      border: none;
-      border-radius: 5px;
-      margin: 0.4rem 0;
-      width: 100%;
-      max-width: 300px;
-    }
-    form button {
-      background: #00ffc8;
-      color: #000;
-      font-weight: bold;
-    }
-    .volver { text-align: center; margin-top: 2rem; }
-    .volver a {
-      color: #00ffc8;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    footer {
-      margin-top: 3rem;
-      font-size: 0.8rem;
-      text-align: center;
-      opacity: 0.4;
-    }
-    #online {
-      margin-bottom: 1rem;
-      color: #0f0;
-      font-size: 0.9rem;
-    }
-    .fade {
-      animation: fadeIn 0.4s ease-in;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .proofs {
-      margin-top: 2rem;
-      max-width: 800px;
-      width: 100%;
-    }
-    .proof-item {
-      margin-bottom: 1rem;
-    }
-    .proof-item img {
-      max-width: 100%;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00ffcc55;
-    }
-    .proof-item button {
-      margin-top: 0.5rem;
-      background: #ff5555;
-      font-size: 0.85rem;
-    }
-    @media (max-width: 600px) {
-      body {
-        padding: 1rem;
-      }
-      input, button {
-        font-size: 1rem;
-        width: 100%;
-      }
-    }
-  </style>
 </head>
 <body>
   <div id="auth">
     <h2>Login Admin</h2>
     <form id="login-form">
-      <input id="user" placeholder="Usuario">
-      <input id="pass" type="password" placeholder="Contraseña">
+      <input id="user" placeholder="Usuario" autocomplete="username" required>
+      <input id="pass" type="password" placeholder="Contraseña" autocomplete="current-password" required>
       <button type="submit">Ingresar</button>
     </form>
   </div>
   <div id="panel" style="display:none">
+    <button id="logout-btn" type="button"><i class="fa fa-sign-out-alt"></i> Cerrar sesión</button>
     <div id="online"></div>
     <h1>Panel de Administración</h1>
-
+    <div id="msg"></div>
     <section>
       <h2>Vouches</h2>
       <div id="lista">Cargando vouches...</div>
     </section>
-
     <section>
       <h2>Tokens</h2>
-      <form id="form-token">
-        <input id="nuevo-cliente" placeholder="Nombre del cliente">
-        <input id="nuevo-producto" placeholder="Producto comprado">
+      <form id="form-token" autocomplete="off">
+        <input id="nuevo-cliente" placeholder="Nombre del cliente" required>
+        <input id="nuevo-producto" placeholder="Producto comprado" required>
         <button type="submit">Crear Token</button>
       </form>
       <div id="tokens">Cargando tokens...</div>
     </section>
-
     <section class="proofs">
       <h2>Proofs - Imágenes de Compra</h2>
-      <input type="file" id="proofFile">
-      <button id="proof-submit">Subir Imagen</button>
+      <input type="file" id="proofFile" accept="image/*">
+      <button id="proof-submit" type="button">Subir Imagen</button>
       <div id="galeria"></div>
     </section>
   </div>
-
   <div class="volver"><a href="index.html">⬅ Volver al inicio</a></div>
-  <footer>Versión 1.12</footer>
+  <footer>Versión 1.13</footer>
 </body>
 </html>
